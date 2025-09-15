@@ -1,0 +1,50 @@
+name: Build KivyMD APK
+
+on:
+  workflow_dispatch:  # می‌تونی دستی اجراش کنی
+  push:
+    branches:
+      - main          # یا هر برنچی که می‌خوای
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      - name: Install system dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y \
+            python3-pip git zip unzip openjdk-17-jdk \
+            autoconf libtool pkg-config zlib1g-dev libc6-dev \
+            libncurses5-dev libstdc++6 python3-dev python3-setuptools \
+            python3-wheel build-essential ccache libffi-dev \
+            libssl-dev libsqlite3-dev wget curl
+
+      - name: Install buildozer
+        run: |
+          pip install --upgrade pip
+          pip install buildozer cython
+
+      - name: Initialize buildozer (if not exists)
+        run: |
+          if [ ! -f buildozer.spec ]; then
+            buildozer init
+          fi
+
+      - name: Build debug APK
+        run: buildozer -v android debug
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Calculator-APK
+          path: bin/*.apk
