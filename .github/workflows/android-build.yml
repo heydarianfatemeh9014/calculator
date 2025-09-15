@@ -1,7 +1,7 @@
 name: Build KivyMD APK
 
 on:
-  workflow_dispatch:
+  workflow_dispatch:       # اجرای دستی
   push:
     branches:
       - main
@@ -11,8 +11,8 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      ANDROID_HOME: ${{ runner.home }}/android-sdk
-      PATH: ${{ runner.home }}/android-sdk/platform-tools:${{ runner.home }}/android-sdk/cmdline-tools/latest/bin:$PATH
+      ANDROID_HOME: ${{ github.workspace }}/android-sdk
+      PATH: ${{ github.workspace }}/android-sdk/platform-tools:${{ github.workspace }}/android-sdk/cmdline-tools/latest/bin:${{ github.workspace }}/.local/bin:$PATH
 
     steps:
       - name: Checkout repository
@@ -26,8 +26,7 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt update
-          sudo apt install -y \
-            python3-pip git zip unzip openjdk-17-jdk \
+          sudo apt install -y python3-pip git zip unzip openjdk-17-jdk \
             autoconf libtool pkg-config zlib1g-dev libc6-dev \
             libncurses5-dev libstdc++6 python3-dev python3-setuptools \
             python3-wheel build-essential ccache libffi-dev \
@@ -42,12 +41,12 @@ jobs:
           mv $ANDROID_HOME/cmdline-tools/cmdline-tools $ANDROID_HOME/cmdline-tools/latest
           yes | sdkmanager --sdk_root=$ANDROID_HOME "platform-tools" "platforms;android-34" "build-tools;34.0.0"
 
-      - name: Install Buildozer & Cython
+      - name: Install Buildozer and Cython
         run: |
           pip install --upgrade pip
           pip install buildozer cython
 
-      - name: Initialize buildozer
+      - name: Initialize buildozer (if not exists)
         run: |
           if [ ! -f buildozer.spec ]; then
             buildozer init
