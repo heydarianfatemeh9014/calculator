@@ -1,14 +1,18 @@
 name: Build KivyMD APK
 
 on:
-  workflow_dispatch:  # می‌تونی دستی اجراش کنی
+  workflow_dispatch:
   push:
     branches:
-      - main          # یا هر برنچی که می‌خوای
+      - main
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
+    env:
+      ANDROID_HOME: ${{ runner.home }}/android-sdk
+      PATH: ${{ runner.home }}/android-sdk/platform-tools:${{ runner.home }}/android-sdk/cmdline-tools/latest/bin:$PATH
 
     steps:
       - name: Checkout repository
@@ -29,12 +33,21 @@ jobs:
             python3-wheel build-essential ccache libffi-dev \
             libssl-dev libsqlite3-dev wget curl
 
-      - name: Install buildozer
+      - name: Install Android SDK & Build-tools
+        run: |
+          mkdir -p $ANDROID_HOME/cmdline-tools
+          wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline-tools.zip
+          unzip cmdline-tools.zip -d $ANDROID_HOME/cmdline-tools
+          rm cmdline-tools.zip
+          mv $ANDROID_HOME/cmdline-tools/cmdline-tools $ANDROID_HOME/cmdline-tools/latest
+          yes | sdkmanager --sdk_root=$ANDROID_HOME "platform-tools" "platforms;android-34" "build-tools;34.0.0"
+
+      - name: Install Buildozer & Cython
         run: |
           pip install --upgrade pip
           pip install buildozer cython
 
-      - name: Initialize buildozer (if not exists)
+      - name: Initialize buildozer
         run: |
           if [ ! -f buildozer.spec ]; then
             buildozer init
